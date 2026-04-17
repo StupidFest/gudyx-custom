@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin · Gudyx Custom</title>
+    <link rel="stylesheet" href="css/estilo.css">
+    <style>
+        .admin-login { max-width: 400px; margin: 100px auto; background: white; padding: 2rem; border-radius: 20px; box-shadow: var(--sombra); }
+        .admin-panel { display: none; }
+        .categoria-bloco { border-left: 4px solid var(--cor-primaria); padding-left: 20px; margin: 20px 0; background: #fafafa; padding: 15px; border-radius: 12px; }
+        .item-editor { background: white; padding: 10px; margin: 10px 0; border-radius: 8px; }
+        button { margin: 5px; cursor: pointer; }
+        .btn-download { background: var(--cor-destaque); font-size: 1.2rem; padding: 12px 24px; }
+    </style>
+</head>
+<body>
+    <div class="admin-login" id="loginBox">
+        <h2>Acesso Administrativo</h2>
+        <input type="password" id="senhaInput" placeholder="Senha" style="width:100%; padding:10px; margin:10px 0;">
+        <button onclick="verificarSenha()" style="width:100%;">Entrar</button>
+        <p style="margin-top:15px; font-size:0.9rem;">Senha padrão: gudyx2026</p>
+    </div>
+
+    <div class="admin-panel" id="adminPanel">
+        <header style="justify-content: space-between; padding: 1rem 2rem;">
+            <h2>Painel de Edição</h2>
+            <button onclick="location.reload()">Sair</button>
+        </header>
+        <main class="admin-container">
+            <p><strong>Edite os conteúdos abaixo e depois baixe o arquivo dados.js atualizado.</strong></p>
+            <div id="editorContainer"></div>
+            <button class="btn-download" onclick="gerarDownload()">⬇ Baixar arquivo dados.js</button>
+            <p style="margin-top:15px;">Depois substitua o arquivo <code>js/dados.js</code> no seu repositório.</p>
+        </main>
+    </div>
+
+    <script src="js/dados.js"></script>
+    <script>
+        const SENHA = 'gudyx2026';
+        let dadosEditaveis = {};
+
+        function verificarSenha() {
+            if (document.getElementById('senhaInput').value === SENHA || window.location.search.includes('senha=gudyx2026')) {
+                document.getElementById('loginBox').style.display = 'none';
+                document.getElementById('adminPanel').style.display = 'block';
+                inicializarEditor();
+            } else {
+                alert('Senha incorreta');
+            }
+        }
+        if (window.location.search.includes('senha=gudyx2026')) {
+            document.getElementById('loginBox').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            window.addEventListener('DOMContentLoaded', inicializarEditor);
+        }
+
+        function inicializarEditor() {
+            dadosEditaveis = JSON.parse(JSON.stringify(siteData));
+            
+            let html = `
+                <div class="admin-section">
+                    <h3>🏠 Home</h3>
+                    <div><label>Título:</label> <input id="editHomeTitulo" value="${dadosEditaveis.homeTitulo || ''}" style="width:100%"></div>
+                    <div><label>Texto:</label> <textarea id="editHomeTexto" style="width:100%">${dadosEditaveis.homeTexto || ''}</textarea></div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🖼️ Slider</h3>
+                    <div id="sliderEditor"></div>
+                    <button onclick="adicionarSlide()">+ Adicionar Slide</button>
+                </div>
+
+                <div class="admin-section">
+                    <h3>📦 Catálogo (Produtos)</h3>
+                    <div id="catalogoEditor"></div>
+                    <button onclick="adicionarCategoria('catalogo')">+ Adicionar Categoria de Produto</button>
+                </div>
+
+                <div class="admin-section">
+                    <h3>🛠️ Serviços</h3>
+                    <div id="servicosEditor"></div>
+                    <button onclick="adicionarCategoria('servicos')">+ Adicionar Categoria de Serviço</button>
+                </div>
+
+                <div class="admin-section">
+                    <h3>📖 Quem Somos</h3>
+                    <div><label>Título:</label> <input id="editQsTitulo" value="${dadosEditaveis.quemSomosTitulo || ''}" style="width:100%"></div>
+                    <div><label>Texto (HTML):</label> <textarea id="editQsTexto" style="width:100%">${dadosEditaveis.quemSomosTexto || ''}</textarea></div>
+                    <div><label>URL Imagem:</label> <input id="editQsImagem" value="${dadosEditaveis.quemSomosImagem || ''}" style="width:100%"></div>
+                </div>
+
+                <div class="admin-section">
+                    <h3>📞 Contato</h3>
+                    <div><label>Telefone:</label> <input id="editContatoTel" value="${dadosEditaveis.contato?.telefone || ''}" style="width:100%"></div>
+                    <div><label>E-mail:</label> <input id="editContatoEmail" value="${dadosEditaveis.contato?.email || ''}" style="width:100%"></div>
+                    <div><label>Endereço:</label> <input id="editContatoEnd" value="${dadosEditaveis.contato?.endereco || ''}" style="width:100%"></div>
+                    <div><label>Horário:</label> <input id="editContatoHorario" value="${dadosEditaveis.contato?.horario || ''}" style="width:100%"></div>
+                </div>
+            `;
+            document.getElementById('editorContainer').innerHTML = html;
+            
+            renderizarSlides();
+            renderizarCategorias('catalogo');
+            renderizarCategorias('servicos');
+        }
+
+        function renderizarSlides() {
+            const div = document.getElementById('sliderEditor');
+            div.innerHTML = dadosEditaveis.slider.map((s, i) => `
+                <div class="item-editor">
+                    <input placeholder="URL da imagem" value="${s.imagem}" data-slide="${i}" data-field="imagem" style="width:100%"><br>
+                    <input placeholder="Título" value="${s.titulo}" data-slide="${i}" data-field="titulo" style="width:100%">
+                    <button onclick="removerSlide(${i})">Remover Slide</button>
+                </div>
+            `).join('');
+            attachSlideListeners();
+        }
+
+        function renderizarCategorias(tipo) {
+            const container = document.getElementById(tipo + 'Editor');
+            const cats = dadosEditaveis[tipo].categorias;
+            container.innerHTML = cats.map((cat, idx) => `
+                <div class="categoria-bloco">
+                    <label><strong>Nome da Categoria:</strong></label>
+                    <input value="${cat.nome}" data-cat="${tipo}" data-idx="${idx}" data-field="nome" style="font-weight:bold; width:100%"><br>
+                    <label>Imagem da Categoria:</label>
+                    <input value="${cat.imagem || ''}" data-cat="${tipo}" data-idx="${idx}" data-field="imagem" style="width:100%"><br>
+                    <button onclick="removerCategoria('${tipo}', ${idx})">Remover Categoria</button>
+                    <h4>Itens desta categoria:</h4>
+                    <div id="itens-${tipo}-${idx}">
+                        ${cat.itens.map((item, iIdx) => `
+                            <div class="item-editor">
+                                <input placeholder="Nome" value="${item.nome}" data-cat="${tipo}" data-idx="${idx}" data-iidx="${iIdx}" data-field="nome"><br>
+                                <input placeholder="Descrição" value="${item.descricao || ''}" data-cat="${tipo}" data-idx="${idx}" data-iidx="${iIdx}" data-field="descricao"><br>
+                                <input placeholder="Preço" value="${item.preco}" data-cat="${tipo}" data-idx="${idx}" data-iidx="${iIdx}" data-field="preco"><br>
+                                <input placeholder="URL Imagem" value="${item.imagem}" data-cat="${tipo}" data-idx="${idx}" data-iidx="${iIdx}" data-field="imagem"><br>
+                                <button onclick="removerItem('${tipo}', ${idx}, ${iIdx})">Remover Item</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <button onclick="adicionarItem('${tipo}', ${idx})">+ Adicionar Item nesta Categoria</button>
+                </div>
+            `).join('');
+            attachCategoriaListeners();
+        }
+
+        function attachSlideListeners() {
+            document.querySelectorAll('[data-slide]').forEach(el => el.addEventListener('input', (e) => {
+                const idx = e.target.dataset.slide;
+                const field = e.target.dataset.field;
+                dadosEditaveis.slider[idx][field] = e.target.value;
+            }));
+        }
+
+        function attachCategoriaListeners() {
+            document.querySelectorAll('[data-cat]').forEach(el => el.addEventListener('input', (e) => {
+                const tipo = e.target.dataset.cat;
+                const idx = e.target.dataset.idx;
+                const iidx = e.target.dataset.iidx;
+                const field = e.target.dataset.field;
+                if (iidx !== undefined) {
+                    dadosEditaveis[tipo].categorias[idx].itens[iidx][field] = e.target.value;
+                } else {
+                    dadosEditaveis[tipo].categorias[idx][field] = e.target.value;
+                }
+            }));
+        }
+
+        window.adicionarSlide = () => {
+            dadosEditaveis.slider.push({ imagem: '', titulo: '' });
+            renderizarSlides();
+        };
+        window.removerSlide = (i) => {
+            dadosEditaveis.slider.splice(i, 1);
+            renderizarSlides();
+        };
+        window.adicionarCategoria = (tipo) => {
+            dadosEditaveis[tipo].categorias.push({ nome: 'Nova Categoria', imagem: '', itens: [] });
+            renderizarCategorias(tipo);
+        };
+        window.removerCategoria = (tipo, idx) => {
+            dadosEditaveis[tipo].categorias.splice(idx, 1);
+            renderizarCategorias(tipo);
+        };
+        window.adicionarItem = (tipo, idxCat) => {
+            dadosEditaveis[tipo].categorias[idxCat].itens.push({ nome: '', descricao: '', preco: '', imagem: '' });
+            renderizarCategorias(tipo);
+        };
+        window.removerItem = (tipo, idxCat, idxItem) => {
+            dadosEditaveis[tipo].categorias[idxCat].itens.splice(idxItem, 1);
+            renderizarCategorias(tipo);
+        };
+
+        function gerarDownload() {
+            // Atualiza campos simples antes de gerar
+            dadosEditaveis.homeTitulo = document.getElementById('editHomeTitulo').value;
+            dadosEditaveis.homeTexto = document.getElementById('editHomeTexto').value;
+            dadosEditaveis.quemSomosTitulo = document.getElementById('editQsTitulo').value;
+            dadosEditaveis.quemSomosTexto = document.getElementById('editQsTexto').value;
+            dadosEditaveis.quemSomosImagem = document.getElementById('editQsImagem').value;
+            dadosEditaveis.contato = {
+                telefone: document.getElementById('editContatoTel').value,
+                email: document.getElementById('editContatoEmail').value,
+                endereco: document.getElementById('editContatoEnd').value,
+                horario: document.getElementById('editContatoHorario').value
+            };
+
+            const conteudo = `const siteData = ${JSON.stringify(dadosEditaveis, null, 4)};
+
+// Função auxiliar para renderizar cards
+function renderCards(containerId, itens) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    container.innerHTML = itens.map(item => \`
+        <div class="card">
+            <img src="\${item.imagem}" alt="\${item.nome}" onerror="this.src='imagens/placeholder.png'">
+            <div class="card-conteudo">
+                <h3>\${item.nome}</h3>
+                <p>\${item.descricao || ''}</p>
+                <div class="preco">\${item.preco || ''}</div>
+            </div>
+        </div>
+    \`).join('');
+}`;
+            const blob = new Blob([conteudo], {type: 'application/javascript'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'dados.js';
+            a.click();
+        }
+    </script>
+</body>
+</html>

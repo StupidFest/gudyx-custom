@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contato · Gudyx Custom</title>
+    <link rel="stylesheet" href="css/estilo.css">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="imagens/mascote.png" alt="Mascote" class="mascote">
+            <h1>GUDYX <span>CUSTOM</span></h1>
+        </div>
+        <nav>
+            <ul>
+                <li><a href="index.html">Home</a></li>
+                <li><a href="servicos.html">Serviços</a></li>
+                <li><a href="catalogo.html">Catálogo</a></li>
+                <li><a href="quem-somos.html">Quem Somos</a></li>
+                <li><a href="contato.html" class="ativo">Contato</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="contato-container">
+        <h2>Fale Conosco</h2>
+        <div class="contato-info" id="contatoInfo"></div>
+        <form class="contato-form">
+            <input type="text" placeholder="Seu nome" required>
+            <input type="email" placeholder="Seu e-mail" required>
+            <textarea placeholder="Mensagem"></textarea>
+            <button type="submit">Enviar</button>
+        </form>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 Gudyx Custom</p>
+    </footer>
+
+    <script src="js/dados.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof siteData !== 'undefined' && siteData.contato) {
+                const c = siteData.contato;
+                document.getElementById('contatoInfo').innerHTML = `
+                    <p><strong>📞 Telefone:</strong> ${c.telefone || '(11) 99999-9999'}</p>
+                    <p><strong>📧 E-mail:</strong> ${c.email || 'contato@gudyx.com'}</p>
+                    <p><strong>📍 Endereço:</strong> ${c.endereco || 'Rua das Ideias, 123'}</p>
+                    <p><strong>🕒 Horário:</strong> ${c.horario || 'Seg-Sex 9h-18h'}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>
